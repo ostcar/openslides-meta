@@ -366,6 +366,15 @@ user:
     restriction_mode: A
     reference: gender
 
+  public_key:
+    type: string
+    restriction_mode: A
+    description: Public key of the user to sign data. base64 encoded.
+  public_key_certificate:
+    type: text
+    restriction_mode: A
+    description: Certificate for the public key of the user.
+
   # Organization, meeting and committee
   organization_management_level:
     type: string
@@ -562,6 +571,16 @@ meeting_user:
   represented_ballot_ids:
     type: relation-list
     to: ballot/represented_meeting_user_id
+    restriction_mode: A
+  default_poll_worker_in_meeting_ids:
+    type: relation-list
+    to: meeting/poll_worker_default_meeting_user_ids
+    reference: meeting
+    restriction_mode: A
+  poll_worker_poll_ids:
+    type: relation
+    to: poll/poll_worker_meeting_user_ids
+    reference: poll
     restriction_mode: A
   chat_message_ids:
     type: relation-list
@@ -1640,6 +1659,11 @@ meeting:
   poll_couple_countdown:
     type: boolean
     default: True
+    restriction_mode: B
+  poll_worker_default_meeting_user_ids:
+    type: relation-list
+    to: meeting_user/default_poll_worker_in_meeting_ids
+    reference: meeting_user
     restriction_mode: B
 
   # Topic poll
@@ -3492,7 +3516,18 @@ poll:
     to: ballot/poll_id
     reference: ballot
     on_delete: CASCADE
-    equal_fields: meeting_id
+    restriction_mode: A
+  bulletin_board_entry_ids:
+    type: relation-list
+    to: poll_bulletin_board_entry/poll_id
+    reference: poll_bulletin_board_entry
+    on_delete: CASCADE
+    restriction_mode: A
+  poll_worker_meeting_user_ids:
+    type: relation-list
+    to: meeting_user/poll_worker_poll_ids
+    reference: meeting_user
+    description: IDs of the meeting users, that are the poll worker for this poll.
     restriction_mode: A
   voted_ids:
     type: relation-list
@@ -3683,6 +3718,30 @@ ballot:
     reference: meeting_user
     to: meeting_user/represented_ballot_ids
     restriction_mode: C
+
+poll_bulletin_board_entry:
+  id: *id_field
+  poll_id:
+    type: relation
+    reference: poll
+    to: poll/bulletin_board_entry_ids
+    restriction_mode: A
+  message_type:
+    type: string
+    required: true
+    restriction_mode: A
+  message:
+    type: text
+    restriction_mode: A
+  timestamp:
+    type: timestamp
+    required: true
+    restriction_mode: A
+  hash_over_last:
+    type: string
+    required: false
+    description: Hash over all fields of the last entry in the same poll. Null for the first entry. Encoded as base64.
+    restriction_mode: A
 
 assignment:
   id: *id_field
